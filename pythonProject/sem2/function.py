@@ -4,11 +4,21 @@ def check_cow_temperature(sensor_current_ma: float) -> str:
     текстовую диагностику состояния датчика и здоровья коровы.
 
     Аргументы:
-        sensor_current_ma (float): Текущее значение выходного сигнала датчика в мА.
+        sensor_current_ma (float, int): Текущее значение выходного сигнала датчика в мА.
 
     Возвращает:
         str: Строка с результатами диагностики.
+
+    Исключения:
+        TypeError: Если на вход передано не число (int или float).
     """
+    # Проверка типа входных данных
+    if not isinstance(sensor_current_ma, (int, float)):
+        raise TypeError(
+            f"Ожидалось число (int или float) для значения датчика, "
+            f"получен тип {type(sensor_current_ma).__name__} со значением {sensor_current_ma!r}."
+        )
+
     # Параметры датчика ДТК75(4-20)
     pv_min = 0.0  # минимальное значение диапазона температур
     pv_max = 75.0  # максимальное значение диапазона температур
@@ -32,7 +42,6 @@ def check_cow_temperature(sensor_current_ma: float) -> str:
     temperature = (sensor_current_ma - i_min) * (pv_max - pv_min) / (i_max - i_min) + pv_min
 
     # 3. Диагностика состояния коровы
-    # Используются сплошные диапазоны для исключения "слепых зон" (например, между 39.0 и 39.1)
     if temperature < 35.0:
         cow_status = "требуется внимание (датчик свалился или корова плохо себя чувствует)"
     elif 35.0 <= temperature < 37.5:
@@ -46,3 +55,17 @@ def check_cow_temperature(sensor_current_ma: float) -> str:
 
     return (f"Получен сигнал датчика {sensor_current_ma}мА, {sensor_status}, "
             f"температура {temperature:.1f} градусов, {cow_status}")
+
+# Примеры использования:
+
+# 1. Корректный вызов (float)
+# print(check_cow_temperature(12.11))
+# Вывод: Получен сигнал датчика 12.11мА, датчик исправен, температура 38.0 градусов, с коровой все ок
+
+# 2. Корректный вызов (int)
+# print(check_cow_temperature(0))
+# Вывод: Получен сигнал датчика 0мА, датчик отключен.
+
+# 3. Вызов с ошибкой типа (раскомментируйте, чтобы проверить)
+# print(check_cow_temperature("12.11"))
+# Выбросит исключение: TypeError: Ожидалось число (int или float) для значения датчика, получен тип str со значением '12.11'.
